@@ -641,14 +641,18 @@ knop, één keer per dag.
 De bot kan niets aan deze website, de containers of je data veranderen. Dat is
 niet alleen een instructie in zijn prompt; het zit in de bouw.
 
-**1. Hij heeft geen gereedschap.** De Claude Code CLI draait in een eigen
-container met `--tools ""` (geen Bash, Read, Write, Edit, WebFetch - niets),
-`--safe-mode` (geen hooks, skills, plugins, MCP-servers of CLAUDE.md uit de
-configuratie), `--strict-mcp-config` met een lege configuratie (anders zou hij
-via de garmin-MCP-servers alsnog naar Garmin kunnen schrijven),
-`--permission-prompts none` (alles wat om toestemming zou vragen wordt geweigerd
-in plaats van gevraagd) en `--max-turns 1`. Hij kan dus uitsluitend tekst
-produceren. `check.sh` controleert of die vier vlaggen er nog staan.
+**1. Hij heeft geen gereedschap.** De Vibe CLI draait headless (`-p`) in een
+eigen container: in headless-modus is geen enkele goedkeuring mogelijk, dus
+wordt élke tool-aanroep door het goedkeuringsbeleid geweigerd in plaats van
+uitgevoerd (getest met vijandige schrijf-, shell- en netwerkpogingen: nul
+bijeffecten). Daarnaast: `--system-prompt-file` vervangt de systeemprompt van
+Vibe volledig door de briefing, `--max-turns 1` houdt het bij één vraag-antwoord,
+`--max-price` zet een kostenplafond, en de eigen `VIBE_HOME` is een lege,
+gesloten configuratie (geen skills, agents, plugins of MCP-servers, dus hij kan
+ook via die weg niet naar Garmin schrijven; session-logging staat uit). Zijn
+werkmap is een lege `/work` buiten elke vertrouwde map. Hij kan dus
+uitsluitend tekst produceren. `check.sh` controleert of die vangrails er nog
+staan en of er geen goedkeuringsomzeiling in de brug zit.
 
 **2. Hij ziet het dashboard niet.** De container `garmin-coach` heeft geen enkele
 mount van de dashboardcode of -data. Hij krijgt tekst binnen en geeft tekst
@@ -679,7 +683,7 @@ of de server. Getest met vijandige voorstellen: 16 van de 17 geweigerd, de 17e
 | `app/coach_knowledge.md` | vaste kennis over deze loper en dit plan |
 | `app/static/coach.js` | chat in de browser, voorstelkaartjes |
 | `app/static/coach.css` | paneel en de animaties van het poppetje |
-| `/mnt/user/appdata/garmin-coach/` | de brug: eigen container, eigen `.env`, `bin/claude` |
+| `/mnt/user/appdata/garmin-coach/` | de brug: eigen container, eigen `.env`, Vibe CLI uit het image |
 
 Het poppetje is één SVG in `index.html` (een Jinja-macro, twee keer neergezet).
 Alle beweging hangt aan de variabele `--rn-speed`, zodat hetzelfde figuurtje kan
@@ -689,16 +693,18 @@ tekening. Bij `prefers-reduced-motion` staat alles stil.
 ### Kosten en snelheid
 
 Een vraag kost ongeveer 4 tot 8 seconden en een paar cent aan tokens, via je
-Claude-abonnement (dezelfde inloggegevens als `nextcloud-claude-bot`). Elk
+Mistral API-key (de key in `garmin-coach/.env`). Elk
 gesprek krijgt de volledige briefing mee, dus de kosten zitten in de invoer.
-Limieten: 6 berichten per minuut, 80 per dag, 2000 tekens per bericht.
+Limieten: 6 berichten per minuut, 80 per dag, 2000 tekens per bericht, en per
+vraag een kostenplafond (`COACH_MAX_BUDGET_USD`).
 
 ### Onderhoud
 
 - **Kennis bijwerken:** `app/coach_knowledge.md` aanpassen en `bash rebuild.sh`.
   Dat is de plek voor alles wat je wilt dat hij blijvend weet.
-- **CLI bijwerken:** `cp /root/.local/bin/claude /mnt/user/appdata/garmin-coach/bin/claude`
-  (de binary is een read-only mount, dus geen rebuild nodig; wel `bash start.sh`).
+- **CLI bijwerken:** in `garmin-coach/requirements.txt` de versie van
+  `mistral-vibe` ophogen en `bash rebuild.sh` (de CLI zit in het image,
+  bewust: een nieuwe versie komt niet stiekem mee met een herstart).
 - **Coach uit:** `COACH_TOKEN` leeghalen in `start.sh` van het dashboard. Dan
   verdwijnt de knop en blijft de rest van het dashboard gewoon werken.
 - **Start:** eerst `bash /mnt/user/appdata/garmin-coach/start.sh`, dan

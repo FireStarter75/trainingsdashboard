@@ -41,15 +41,22 @@ done
 
 echo "=== coach ==="
 docker ps --filter name=garmin-coach --format '  {{.Names}}  {{.Status}}'
-# Structurele grens: de CLI mag geen enkele tool hebben. Staat die vlag er niet
-# meer, dan is de bot niet langer begrensd en moet dat opvallen.
-for flag in '"--tools", ""' '"--safe-mode"' '"--strict-mcp-config"' '"--permission-prompts", "none"'; do
+# Structurele grens: de CLI draait headless met een vervangen systeemprompt,
+# een loodlimiet en een kostenplafond; in headless wordt élke tool-aanroep
+# geweigerd. Staat een van die onderdelen er niet meer, dan is de bot niet
+# langer begrensd en moet dat opvallen.
+for flag in '"-p",' '"--system-prompt-file"' '"--max-turns"' '"--max-price"'; do
   if docker exec garmin-coach grep -qF "$flag" /app/server.py 2>/dev/null; then
     echo "  OK   grens aanwezig: $flag"
   else
     echo "  FOUT grens ONTBREEKT: $flag"
   fi
 done
+if docker exec garmin-coach grep -qE 'auto-approve|--yolo|bypass_tool' /app/server.py 2>/dev/null; then
+  echo "  FOUT grens GEBROKEN: goedkeuringsomzeiling staat in server.py"
+else
+  echo "  OK   geen goedkeuringsomzeiling in de brug"
+fi
 curl -4 -s -m 90 -b "$CK" "$HOST/api/chat/health" \
   | jq -r 'if .ok then "  OK   brug bereikbaar, CLI \(.bridge.cli), inloggegevens \(.bridge.credentials_present)"
            else "  FOUT brug: \(.error // .bridge.error)" end' 2>/dev/null \

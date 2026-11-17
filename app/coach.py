@@ -38,7 +38,7 @@ bp = Blueprint("coach", __name__)
 
 COACH_URL = os.environ.get("COACH_URL", "http://garmin-coach:8099")
 COACH_TOKEN = os.environ.get("COACH_TOKEN", "")
-COACH_MODEL = os.environ.get("COACH_MODEL", "sonnet")
+COACH_MODEL = os.environ.get("COACH_MODEL", "mistral-medium-3.5")
 COACH_TIMEOUT = float(os.environ.get("COACH_HTTP_TIMEOUT", "180"))
 MAX_MSG_CHARS = int(os.environ.get("COACH_MAX_MSG", "2000"))
 MAX_PER_DAY = int(os.environ.get("COACH_MAX_PER_DAY", "80"))

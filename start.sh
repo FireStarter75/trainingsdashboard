@@ -30,7 +30,7 @@ docker run -d --name garmin-dashboard \
   -e MCP_ENDURANCE_TOKEN="$GARMIN_MCP_HTTP_TOKEN_ENDURANCE" \
   -e COACH_URL=http://garmin-coach:8099 \
   -e COACH_TOKEN="$COACH_TOKEN" \
-  -e COACH_MODEL=sonnet \
+  -e COACH_MODEL=mistral-medium-3.5 \
   -v "$BASE/data:/data" \
   -v /mnt/user/appdata/garmin-mcp/gpx:/gpx:ro \
   garmin-dashboard:latest
