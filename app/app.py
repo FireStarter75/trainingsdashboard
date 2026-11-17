@@ -286,6 +286,14 @@ def _webapp_index() -> bytes:
 
 
 @app.route("/app")
+@auth.require_auth
+def webapp_index_noslash():
+    # Zonder slash resolvlen de relatieve asset-paden uit de Vite-build
+    # (./assets/...) tegen de oudermap in plaats van tegen /app — precies
+    # wat een zwart scherm gaf. Dus: altijd door naar /app/.
+    return redirect((request.script_root or "") + "/app/", code=308)
+
+
 @app.route("/app/")
 @auth.require_auth
 def webapp_index():

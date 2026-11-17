@@ -3,7 +3,11 @@ import type { State } from '../lib/types';
 /* KPI-tegels: totaal gelopen km sinds de planstart, langste duurloop ooit en
    de huidige reeks weken waarin het plan (vrijwel) is gevolgd. */
 export function KpiTiles({ state }: { state: State }) {
-  const kmTotal = Object.values(state.actuals).reduce((s, a) => s + (a.km || 0), 0);
+  // Alleen de weken van dit plan meetellen: de actuals bevatten de hele
+  // Garmin-historie, en "totaal gelopen" moet over deze campagne gaan.
+  const kmTotal = state.plan.weeks
+    .filter((w) => w.start <= state.today)
+    .reduce((s, w) => s + (state.actuals[w.start]?.km || 0), 0);
 
   // Langste duurloop: langste van de geplande weken tot en met nu...
   const planned = state.plan.weeks
@@ -26,7 +30,7 @@ export function KpiTiles({ state }: { state: State }) {
   }
 
   const items = [
-    { label: 'Totaal gelopen', value: kmTotal ? kmTotal.toFixed(1).replace('.', ',') : '0', unit: 'km', sub: `sinds ${state.plan.weeks[0]?.start ?? 'de start'}` },
+    { label: 'Totaal gelopen', value: kmTotal ? kmTotal.toFixed(1).replace('.', ',') : '0', unit: 'km', sub: 'in dit plan, sinds ' + (state.plan.weeks[0]?.start ?? 'de start') },
     { label: 'Langste duurloop', value: longest ? longest.toFixed(1).replace('.', ',') : '–', unit: 'km', sub: planned ? `in het plan: ${Math.round(planned)} min` : 'ooit gelopen' },
     { label: 'Huidige streak', value: String(streak), unit: streak === 1 ? 'week' : 'weken', sub: '≥ 90% van het plan' },
   ];
