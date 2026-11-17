@@ -3,13 +3,14 @@
 Leest data uit de twee garmin-mcp servers, rekent voortgang tegen het plan af,
 en kan trainingen als workout naar Garmin Connect schrijven en inplannen.
 """
+import json
 import os
 import re
 import time
 import traceback
 from datetime import date, datetime, timedelta
 
-from flask import Flask, jsonify, redirect, render_template, request, session, url_for
+from flask import Flask, Response, jsonify, redirect, render_template, request, send_from_directory, session, url_for
 
 import adapt
 import auth
@@ -261,6 +262,84 @@ def build_state(force=False):
         "scheduler": (store.cache_get("scheduler_heartbeat")[0] or None),
         "cache_ages": store.cache_ages(),
     }
+
+
+# ------------------------------------------------------------- webapp (React)
+# De moderne webapp (webapp/, gebouwd met Vite) wordt hier geserveerd onder
+# /app. De build is statisch; het enige wat hier gebeurt is het indexbestand
+# per verzoek van het juiste basispad voorzien, zodat dezelfde build onder /
+# en onder /test werkt: de JS leest window.__API_BASE__.
+
+WEBAPP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webapp_dist")
+_webapp_index_cache: dict = {}
+
+
+def _webapp_index() -> bytes:
+    mtime = os.path.getmtime(os.path.join(WEBAPP_DIR, "index.html"))
+    cached = _webapp_index_cache.get("mtime")
+    if cached != mtime:
+        with open(os.path.join(WEBAPP_DIR, "index.html"), "rb") as fh:
+            html = fh.read()
+        _webapp_index_cache["html"] = html
+        _webapp_index_cache["mtime"] = mtime
+    return _webapp_index_cache["html"]
+
+
+@app.route("/app")
+@app.route("/app/")
+@auth.require_auth
+def webapp_index():
+    base = (request.script_root or "").rstrip("/")
+    html = _webapp_index().replace(
+        b"</head>",
+        b"<script>window.__API_BASE__=" + json.dumps(base).encode() + b";</script></head>",
+        1,
+    )
+    resp = Response(html, mimetype="text/html")
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
+@app.route("/app/assets/<path:fname>")
+@auth.require_auth
+def webapp_asset(fname):
+    resp = send_from_directory(os.path.join(WEBAPP_DIR, "assets"), fname)
+    resp.headers["Cache-Control"] = "public, max-age=604800, immutable"
+    return resp
+
+
+@app.route("/api/log", methods=["POST"])
+@auth.require_auth
+def api_log():
+    """Logt een gelopen training (dezelfde opslag als de coach-boekhouding)."""
+    body = request.get_json(silent=True) or {}
+    day = str(body.get("day") or date.today().isoformat())[:10]
+    try:
+        _ = datetime.strptime(day, "%Y-%m-%d")
+    except ValueError:
+        return jsonify({"error": "ongeldige datum"}), 400
+    km = body.get("km")
+    minutes = body.get("minutes")
+    feel = body.get("feel")
+
+    def _num(v):
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return None
+
+    if ((_num(km) is None or _num(km) <= 0) and (_num(minutes) is None or _num(minutes) <= 0)
+            and not body.get("note")):
+        return jsonify({"error": "leg minstens afstand of tijd vast"}), 400
+    entry_id = store.log_add({
+        "day": day,
+        "km": round(_num(km), 2) if _num(km) else None,
+        "minutes": round(_num(minutes)) if _num(minutes) else None,
+        "feel": int(feel) if feel in (1, 2, 3, 4, 5) else None,
+        "note": (str(body.get("note") or "")[:400] or None),
+        "source": "webapp",
+    })
+    return jsonify({"ok": True, "log_id": entry_id})
 
 
 # ---------------------------------------------------------------------- routes
