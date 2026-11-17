@@ -126,6 +126,19 @@ function tile(k, v, n, cls) {
     <div class="v">${v}</div><div class="n">${n || ''}</div></div>`;
 }
 
+function recKort(rec) {
+  /* Eerste regel van het readiness-advies, leesbaar gemaakt voor de tegel:
+     het voorvoegsel staat al als kop van de tegel, de verwijzing naar de
+     interne beslisregel (bijv. "(decision_rule pairs)") is jargon, en een
+     harde afkapping midden in een woord leest slecht. */
+  let s = String(rec || '').replace(/^(GO|MODIFY|REST):\s*/, '');
+  s = s.replace(/\s*\((?:decision_rule|decision)[^)]*\)\.?$/, '').trim();
+  s = s.replace(/^(\d+) red \((\w+)\) without a red pair$/i,
+    '$1 rood signaal ($2), zonder tweede rood signaal erbij');
+  if (s.length > 64) s = s.slice(0, 64).replace(/\s+\S*$/, '') + '…';
+  return s;
+}
+
 function renderTiles() {
   const m = STATE.metrics, b = STATE.baseline, p = STATE.plan;
   const ts = m.training_status.value || {};
@@ -154,7 +167,7 @@ function renderTiles() {
   if (rd.decision) {
     const dm = { GO: 'good', MODIFY: 'warn', REST: 'bad' };
     const rec = Array.isArray(rd.recommendation) ? rd.recommendation[0] : rd.recommendation;
-    out.push(tile('Vandaag', rd.decision, rec ? String(rec).replace(/^(GO|MODIFY|REST):\s*/, '').slice(0, 46) : '', dm[rd.decision]));
+    out.push(tile('Vandaag', rd.decision, recKort(rec), dm[rd.decision]));
   }
   const hm = rp.predictions && rp.predictions.half_marathon;
   const e = p.estimate;
