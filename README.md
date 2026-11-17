@@ -716,3 +716,19 @@ Verlicht de coach een week omdat jij iets vertelt wat niet in de data staat, dan
 mag de wekelijkse automatische beoordeling dat niet ongedaan maken. Zelfde regel
 als binnen `adapt.decide`: de laagste factor wint. De redenen van allebei blijven
 staan, en je ziet in de kaart "Automatische bijstelling" wat er is gebeurd.
+
+Laat jij zelf de bijstelling teruggedraaien (knop "Terugdraaien" op het
+voorstellenkaartje), dan telt dat als besluit: de automatische beoordeling zet
+die week niet terug op de curve, zolang de week nog niet begonnen is. Een
+teruggedraaide week staat daarom gewoon als "niet bijgesteld" in het plan.
+Zodra de week begint, doen de signalen weer mee. (Deze regel bestaat sinds
+17-11-2026: daarvoor werd een teruggedraaide week bij de eerstvolgende
+beoordeling stilletjes opnieuw verlicht, omdat een terugdraai de
+bijstellingsrij wegneemt en daarmee elk spoor van het besluit.)
+
+Weigert de poort (in `coach.py`) een voorstel van de coach, dan krijgt het géén
+kaartje - maar de coach kon dat zelf niet zien en bleef soms beweren dat het
+kaartje er stond. Sinds 17-11-2026 zet het dashboard onder elk antwoord met een
+geweigerd voorstel een vaste regel "(Voorstel niet toegevoegd: ...)", met de
+reden. Die staat ook in het gesprek, dus de volgende beurt van de coach weet het
+ook.

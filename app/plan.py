@@ -253,10 +253,14 @@ def build_plan(config=None, baseline=None, adaptations=None):
 
     # Wekelijkse aanpassing uit de echte Garmin-data toepassen voordat de
     # ACWR-bewaking eroverheen gaat: de bewaking mag een verlichting nooit
-    # ongedaan maken, alleen verder verlagen.
+    # ongedaan maken, alleen verder verlagen. Een rij met schaal 1,0 en geen
+    # afgevallen kwaliteitssessie verandert niets en staat daarom ook niet
+    # als bijstelling getekend: dat zijn de besluiten "ongewijzigd" en de
+    # door de coach bewust teruggedraaide weken.
     for wk in weeks:
         ad = adaptations.get(wk["start"])
-        if ad and wk["phase"] != "race":
+        if ad and wk["phase"] != "race" and (
+                float(ad.get("scale") or 1.0) != 1.0 or ad.get("drop_quality")):
             rebuild(wk, wk["long_min"] * float(ad.get("scale") or 1.0))
             wk["adapted"] = {"scale": ad.get("scale"), "severity": ad.get("severity"),
                              "reasons": ad.get("reasons"),

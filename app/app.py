@@ -469,6 +469,28 @@ def run_adaptation(reason="handmatig"):
                                     "lichter" if decision["scale"] < 0.98 else
                                     "zwaarder" if decision["scale"] > 1.02 else "ongewijzigd")
             signals["kept_coach_adjustment"] = prev["scale"]
+
+    # Een bewuste terugdraai door de coach (met jouw klik goedgekeurd) telt als
+    # besluit: de automatische beoordeling zet die week niet terug op de curve.
+    # Zolang de week nog niet begonnen is blijft die bescherming staan; zodra
+    # hij begint, doen de signalen weer mee. Zonder dit werd een teruggedraaide
+    # week bij de eerstvolgende beoordeling stilletjes opnieuw verlicht, omdat
+    # er na een terugdraai geen rij (en dus geen herinnering) meer overbleef.
+    cleared_at = store.last_coach_clear(upcoming["start"])
+    prev_is_clear = bool(prev) and (prev.get("signals") or {}).get("via") == "coach_clear"
+    clear_protected = False
+    if cleared_at and str(upcoming["start"]) > today:
+        if prev is None or prev_is_clear or cleared_at > float(prev.get("decided_at") or 0):
+            clear_protected = True
+    if clear_protected:
+        decision = {
+            "scale": 1.0, "drop_quality": False, "severity": "ongewijzigd",
+            "reasons": ["Teruggedraaid door de coach op %s; de automatische beoordeling "
+                        "zet dit niet terug zolang de week nog niet begonnen is."
+                        % time.strftime("%d-%m", time.localtime(cleared_at))],
+        }
+        signals["coach_clear_respected"] = cleared_at
+
     store.save_adaptation(upcoming["start"], decision, signals)
     store.cache_put("last_adaptation_week",
                     (date.today() - timedelta(days=date.today().weekday())).isoformat())

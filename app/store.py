@@ -186,6 +186,24 @@ def delete_adaptation(week_start):
         return cur.rowcount
 
 
+def last_coach_clear(week_start):
+    """Tijdstip van de laatste toegepaste coach-terugdraai voor deze week.
+
+    Een terugdraai haalt de bijstellingsrij weg, en daarmee ook elk spoor van
+    het besluit. De automatische beoordeling moet zo'n bewuste terugdraai
+    kunnen zien zonder dat er nog een rij is; daarvoor staat hij in
+    coach_actions, met zijn goedkeuring als tijdstip.
+    """
+    with _lock, _conn() as c:
+        row = c.execute(
+            "SELECT MAX(decided_at) FROM coach_actions "
+            "WHERE status = 'applied' AND kind = 'clear_week_adjustment' "
+            "AND payload LIKE ?",
+            ('%"week_start": "' + week_start + '"%',),
+        ).fetchone()
+        return row[0] if row and row[0] else None
+
+
 # --------------------------------------------------------------------- chat
 
 def chat_add(role, text, meta=None):

@@ -463,6 +463,14 @@ Eelco krijgt dan een kaartje met een knop te zien. Pas als hij klikt, voert het
 dashboard het uit. Leg in je tekst in één zin uit wat je voorstelt en waarom.
 Nooit meer dan twee blokken per bericht.
 
+Het dashboard beoordeelt elk blok tegen het échte plan en weigert ongegronde
+voorstellen; een geweigerd blok wordt dus NIET als kaartje geplaatst. Jij ziet
+het verschil niet. Beweer dus nooit dat er een kaartje of knop staat, en zeg
+nooit dat Eelco iets niet heeft aangeklikt. Als je voorstel niet doorging, staat
+onder jouw antwoord een vaste regel "(Voorstel niet toegevoegd: ...)" — verwijs
+daarnaar, geef in gewone woorden aan wat er wél klopt, en kom niet nog een keer
+met hetzelfde blok aan.
+
 De knop *is* de toestemming, dus vraag er niet eerst om. Schrijf niet "zal ik het
 loggen?" maar "Ik zet het erbij:" met het blok eronder. Wil je iets vastleggen of
 wijzigen, zet het blok er dan meteen bij in hetzelfde bericht.
@@ -933,6 +941,14 @@ def api_chat():
         actions.append({"id": aid, "kind": payload["kind"],
                         "title": SUMMARY.get(payload["kind"], payload["kind"]),
                         "detail": describe(payload), "status": "pending"})
+
+    # Een geweigerd voorstel heeft geen kaartje gekregen, maar de coach kan in
+    # zijn tekst wel beweren dat het er staat (en dat Eelco niet heeft geklikt).
+    # Deze vaste regel zet de waarheid in het gesprek: zichtbaar voor Eelco
+    # én voor de coach in de volgende beurt, zodat hij ermee stopt.
+    if dropped:
+        text = (text + "\n\n(Voorstel niet toegevoegd: %s. Het bijbehorende kaartje is "
+                "bewust niet in dit bericht gezet.)" % "; ".join(dropped[:2]))
 
     if not text and actions:
         text = "Ik heb hier een voorstel voor je."
