@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inloggen · dash</title>
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg?v={{ v }}">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/icon-32.png?v={{ v }}">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/icon-180.png?v={{ v }}">
+<link rel="manifest" href="/static/manifest.webmanifest?v={{ v }}">
+<meta name="theme-color" content="#0c1017">
+<meta name="apple-mobile-web-app-title" content="dash">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&display=swap">
+<link rel="stylesheet" href="/static/style.css?v={{ v }}">
+<style>
+  body{display:grid;place-items:center;min-height:100vh;padding:20px}
+  .loginCard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:26px;width:min(360px,100%)}
+  .loginCard h1{margin-bottom:6px}
+  .loginCard form{margin-top:18px}
+  .loginCard input{width:100%;background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:9px;padding:11px 13px;font:inherit}
+  .loginCard .btn{width:100%;margin-top:12px;padding:11px}
+</style>
+</head>
+<body>
+<div class="loginCard">
+  <h1>dash</h1>
+  <p class="muted">{{ goal }}</p>
+  {% if error %}<div class="msg err" style="margin-top:14px">{{ error }}</div>{% endif %}
+  <form method="post" autocomplete="on">
+    <input type="hidden" name="next" value="{{ next }}">
+    <input type="password" name="password" placeholder="Wachtwoord" required autofocus
+           autocomplete="current-password" {% if locked %}disabled{% endif %}>
+    <button class="btn" {% if locked %}disabled{% endif %}>Inloggen</button>
+  </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "dash - trainingsdashboard",
+  "short_name": "dash",
+  "description": "Voortgang naar je hardloopdoel, uit Garmin.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a0d13",
+  "theme_color": "#0c1017",
+  "icons": [
+    { "src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

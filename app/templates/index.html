@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dash</title>
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg?v={{ v }}">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/icon-32.png?v={{ v }}">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/icon-180.png?v={{ v }}">
+<link rel="manifest" href="/static/manifest.webmanifest?v={{ v }}">
+<meta name="theme-color" content="#0c1017">
+<meta name="apple-mobile-web-app-title" content="dash">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="/static/style.css?v={{ v }}">
+<link rel="stylesheet" href="/static/coach.css?v={{ v }}">
+</head>
+<body>
+<div id="loading" class="loading">Data ophalen uit Garmin…</div>
+
+<header class="topbar">
+  <div class="brand">
+    <h1>dash</h1>
+    <p id="goalSub" class="sub"></p>
+  </div>
+  <div class="topActions">
+    <button id="btnRefresh" class="btn">Verversen</button>
+    <button id="btnGoal" class="btn ghost">Doel wijzigen</button>
+    <a href="/logout" class="btn ghost" style="text-decoration:none">Uitloggen</a>
+  </div>
+</header>
+
+<main id="main" hidden>
+
+  <section class="countdown">
+    <div class="cdTitle" id="goalName"></div>
+    <div class="cdNum"><span id="cdDays">&ndash;</span><small>dagen te gaan</small></div>
+    <div class="cdBar"><div id="cdFill" class="cdFill"></div></div>
+    <div class="cdMeta">
+      <span id="cdWeek"></span>
+      <span id="cdPhase" class="pill"></span>
+    </div>
+  </section>
+
+  <div id="renderWarn" class="msg" hidden></div>
+
+  <section class="tiles" id="tiles"></section>
+
+  <section class="card" id="adaptCard">
+    <div class="cardHead">
+      <h2>Automatische bijstelling</h2>
+      <div class="headActions">
+        <span class="muted" id="adaptWhen"></span>
+        <button id="btnAdapt" class="btn small ghost">Nu opnieuw beoordelen</button>
+      </div>
+    </div>
+    <div id="adaptBody"></div>
+  </section>
+
+  <section class="card">
+    <div class="cardHead">
+      <h2>Deze week</h2>
+      <div class="headActions">
+        <span id="weekSummary" class="muted"></span>
+        <button id="btnUploadWeek" class="btn small">Hele week naar Garmin</button>
+      </div>
+    </div>
+    <div id="thisWeek" class="sessions"></div>
+    <div id="uploadMsg" class="msg" hidden></div>
+  </section>
+
+  <section class="grid2">
+    <div class="card">
+      <h2>Volume: plan tegen werkelijkheid</h2>
+      <p class="muted">Geplande minuten per week, met wat je echt liep erover.</p>
+      <div class="chartWrap"><canvas id="chVolume"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Duurloop naar 21,1 km</h2>
+      <p class="muted">De langste training per week. Dit is de motor van het plan.</p>
+      <div class="chartWrap"><canvas id="chLong"></canvas></div>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div class="card">
+      <h2>Vorm: fitheid, vermoeidheid, frisheid</h2>
+      <p class="muted">CTL is fitheid, ATL vermoeidheid, TSB het verschil. Positieve TSB = fris.</p>
+      <div class="chartWrap"><canvas id="chForm"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Opbouwsnelheid (ACWR)</h2>
+      <p class="muted">Deze week gedeeld door het gemiddelde van de vier weken ervoor.
+         Boven 1,3 loopt het blessurerisico op, boven 1,5 sterk.</p>
+      <div class="chartWrap"><canvas id="chAcwr"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Intensiteitsverdeling</h2>
+      <p class="muted">Onder LT1 (149 bpm) hoort 75% of meer te zijn. Daar zit je winst.</p>
+      <div class="chartWrap"><canvas id="chZones"></canvas></div>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div class="card">
+      <h2>Herstel: rusthartslag en HRV</h2>
+      <p class="muted">Loopt de rusthartslag op terwijl HRV zakt, dan doe je te veel.</p>
+      <div class="chartWrap"><canvas id="chRecovery"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Verwachting op de racedag</h2>
+      <div id="projection" class="projection"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="cardHead">
+      <h2>Gelopen routes</h2>
+      <div class="headActions">
+        <span class="muted" id="routeCount"></span>
+        <button id="btnRoutesAll" class="btn small ghost">Alles aan</button>
+        <button id="btnRoutesNone" class="btn small ghost">Alles uit</button>
+        <button id="btnRoutesFit" class="btn small">Passend maken</button>
+      </div>
+    </div>
+    <div id="mapWarn" class="msg" hidden></div>
+    <div id="map" class="map"></div>
+    <div id="routeList" class="routeList"></div>
+  </section>
+
+  <section class="card">
+    <div class="cardHead">
+      <h2>Het hele plan</h2>
+      <div class="headActions">
+        <span class="muted" id="planMeta"></span>
+        <button id="btnExpandAll" class="btn small ghost">Alles uitklappen</button>
+      </div>
+    </div>
+    <div class="tableWrap">
+      <table class="plan" id="planTable">
+        <thead><tr>
+          <th></th><th>Wk</th><th>Vanaf</th><th>Fase</th>
+          <th class="num">Duurloop</th><th class="num">Loopvolume</th>
+          <th class="num">Gelopen</th><th class="num">ACWR</th>
+          <th>Sessies</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card" id="diagCard">
+    <div class="cardHead"><h2>Bronnen</h2><span class="muted">status van de twee MCP-servers</span></div>
+    <div id="diag" class="diag"></div>
+  </section>
+
+</main>
+
+<dialog id="goalDlg" class="dlg">
+  <form id="goalForm" method="dialog">
+    <h2>Doel wijzigen</h2>
+    <p class="muted">Het plan wordt hierna opnieuw opgebouwd. Werkt ook voor een volgend doel.</p>
+    <label>Naam<input name="goal_name" required maxlength="120"></label>
+    <label>Racedatum<input name="race_date" type="date" required></label>
+    <label>Afstand in km<input name="distance_km" type="number" step="0.1" min="1" max="200" required></label>
+    <label>Trainingen per week
+      <select name="days_per_week">
+        <option value="2">2</option><option value="3">3</option>
+        <option value="4">4</option><option value="5">5</option>
+      </select>
+    </label>
+    <label>Streeftijd in minuten (leeg = geen tijdsdoel)<input name="target_time_min" type="number" min="30" max="600" step="1"></label>
+    <label>Prioriteit
+      <select name="priority">
+        <option value="health">Gezond finishen</option>
+        <option value="time">Streeftijd</option>
+      </select>
+    </label>
+    <div class="dlgActions">
+      <button value="cancel" class="btn ghost">Annuleren</button>
+      <button id="goalSave" value="save" class="btn">Opslaan</button>
+    </div>
+  </form>
+</dialog>
+
+{#
+  De coach. De hardloper is één macro die twee keer wordt neergezet: klein op de
+  knop en groot in het paneel. Alle beweging zit in coach.css, gestuurd door de
+  variabele --rn-speed, zodat hetzelfde poppetje kan joggen, sprinten of staan
+  zonder dat er een tweede tekening nodig is.
+#}
+{% macro runner(cls) -%}
+<svg class="rn {{ cls }}" viewBox="0 0 120 124" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="rnShirt{{ cls }}" x1="0" y1="0" x2=".7" y2="1">
+      <stop offset="0" stop-color="#78b0ff"/><stop offset="1" stop-color="#3d74da"/>
+    </linearGradient>
+  </defs>
+  <g class="rnLines" fill="#5b9dff">
+    <rect x="4" y="44" width="24" height="3.4" rx="1.7"/>
+    <rect x="0" y="60" width="15" height="3.4" rx="1.7"/>
+    <rect x="8" y="76" width="20" height="3.4" rx="1.7"/>
+  </g>
+  <ellipse class="rnShadow" cx="60" cy="116" rx="25" ry="4.5" fill="#000" opacity=".35"/>
+  <g class="rnAll">
+    <!-- achterste arm en been eerst, die horen achter de romp -->
+    <!-- Armen zijn gebogen lijnen, geen rechte staven: een hardloper houdt zijn
+         ellebogen in een hoek van ongeveer negentig graden. De achterste arm is
+         een tint donkerder, anders valt hij samen met de voorste. -->
+    <g class="rnArmB"><path d="M62 47 L54 60 L45 55" fill="none" stroke="#d9a87f"
+       stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g class="rnLegB">
+      <rect x="53" y="62" width="12" height="26" rx="6" fill="#1c2742"/>
+      <g class="rnShinB">
+        <rect x="54" y="84" width="10.5" height="25" rx="5.2" fill="#e7b48c"/>
+        <path class="rnShoe" d="M52 105h12a7 7 0 0 1 7 7v2H52z" fill="#1fbf92"/>
+      </g>
+    </g>
+    <!-- romp, iets voorovergebogen zoals bij echt lopen -->
+    <path class="rnTorso" d="M50 48c0-7 6-12 13-12h3c7 0 12 6 11 13l-3 19c-1 6-6 10-12 10h-2c-7 0-12-5-12-12z"
+          fill="url(#rnShirt{{ cls }})"/>
+    <path class="rnBib" d="M63 36h6l-1 10h-6z" fill="#ffffff" opacity=".22"/>
+    <!-- voorste been -->
+    <g class="rnLegF">
+      <rect x="56" y="62" width="12.5" height="27" rx="6.2" fill="#243355"/>
+      <g class="rnShinF">
+        <rect x="57" y="85" width="11" height="26" rx="5.5" fill="#f0c9a0"/>
+        <path class="rnShoe" d="M55 107h13a7 7 0 0 1 7 7v2H55z" fill="#2fd6a3"/>
+      </g>
+    </g>
+    <!-- hoofd -->
+    <g class="rnHead">
+      <circle cx="72" cy="27" r="13" fill="#f0c9a0"/>
+      <path d="M60 22a13 13 0 0 1 25-3c-3 3-9 4-14 3-4-1-8-1-11 0z" fill="#3b2b25"/>
+      <g class="rnBand">
+        <path d="M59 21q13-7 26-1l-1 4q-12-6-24 1z" fill="#ff6b81"/>
+        <path class="rnBandTail" d="M59 22l-9 3 1 4 9-4z" fill="#ff6b81"/>
+      </g>
+      <circle class="rnEye" cx="78" cy="27" r="1.9" fill="#2a2420"/>
+      <path class="rnMouth" d="M77 33q3 2.5 5.5 0" stroke="#2a2420" stroke-width="1.6"
+            fill="none" stroke-linecap="round"/>
+      <circle cx="66" cy="33" r="3" fill="#ff8fa0" opacity=".45"/>
+    </g>
+    <!-- voorste arm, met horloge -->
+    <g class="rnArmF">
+      <path d="M70 46 L73 61 L83 56" fill="none" stroke="#f0c9a0"
+            stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- het horloge, want daar komt alle data in dit dashboard vandaan -->
+      <g transform="rotate(-20 79 57)">
+        <rect x="75.2" y="54" width="8.5" height="6.4" rx="2.2" fill="#0f1420"/>
+        <rect x="76.5" y="55.6" width="5.9" height="3.2" rx="1.2" fill="#5b9dff"/>
+      </g>
+    </g>
+    <g class="rnSweat">
+      <circle cx="90" cy="18" r="2.6" fill="#7fd4ff"/>
+    </g>
+  </g>
+</svg>
+{%- endmacro %}
+
+<button id="coachFab" class="coachFab" type="button" aria-label="Open je coach">
+  {{ runner('rnFab') }}
+  <span id="coachBadge" class="coachBadge" hidden></span>
+</button>
+
+<div id="coachNudge" class="coachNudge" hidden>
+  <span id="coachNudgeText"></span>
+  <button id="coachNudgeClose" class="coachNudgeClose" type="button" aria-label="Weg">&times;</button>
+</div>
+
+<aside id="coachPanel" class="coachPanel" hidden aria-label="Coach">
+  <header class="coachHead">
+    <div class="coachStage">{{ runner('rnStage') }}</div>
+    <div class="coachWho">
+      <strong>Coach</strong>
+      <span id="coachState" class="coachStateLine">klaar voor je vraag</span>
+    </div>
+    <div class="coachHeadBtns">
+      <button id="coachClear" class="coachIcon" type="button" title="Nieuw gesprek"
+              aria-label="Nieuw gesprek">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path
+          d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6" stroke="currentColor" stroke-width="2"
+          fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="coachClose" class="coachIcon" type="button" title="Sluiten"
+              aria-label="Coach sluiten">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"
+          stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="coachLog" class="coachLog" aria-live="polite"></div>
+  <div id="coachChips" class="coachChips"></div>
+
+  <form id="coachForm" class="coachForm">
+    <textarea id="coachInput" class="coachInput" rows="1" maxlength="2000"
+              placeholder="Vertel hoe het ging, of stel een vraag…"></textarea>
+    <button id="coachSend" class="coachSend" type="submit" aria-label="Versturen">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m0 0l-6 6m6-6l6 6"
+        stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"
+        stroke-linejoin="round"/></svg>
+    </button>
+  </form>
+  <p class="coachFoot">Hij kan niets aan dit dashboard of je data veranderen. Elke
+    wijziging in je schema vraagt eerst jouw klik.</p>
+</aside>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="/static/app.js?v={{ v }}"></script>
+<script src="/static/coach.js?v={{ v }}"></script>
+</body>
+</html>

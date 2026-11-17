@@ -1,0 +1,234 @@
+/* ============================================================
+   dash — de coach
+   Zelfde taal als style.css: donker, zachte randen, variabelen uit :root.
+   Alle beweging van het poppetje hangt aan --rn-speed, zodat één tekening
+   kan joggen (rust), sprinten (denkt) en bijpraten (antwoordt).
+   ============================================================ */
+
+.coachFab,
+.coachPanel,
+.coachNudge { --rn-speed: .80s; --rn-sweat: 0; }
+
+/* ---------- de hardloper ---------- */
+
+.rn { display:block; overflow:visible }
+.rn * { transform-box:view-box }
+
+.rnAll       { animation:rnBob calc(var(--rn-speed) / 2) ease-in-out infinite }
+.rnLegF      { transform-origin:62px 66px;   animation:rnThigh var(--rn-speed) ease-in-out infinite }
+.rnLegB      { transform-origin:59px 66px;   animation:rnThigh var(--rn-speed) ease-in-out infinite;
+               animation-delay:calc(var(--rn-speed) * -.5) }
+.rnShinF     { transform-origin:62.5px 88px; animation:rnShin var(--rn-speed) ease-in-out infinite;
+               animation-delay:calc(var(--rn-speed) * -.08) }
+.rnShinB     { transform-origin:59px 87px;   animation:rnShin var(--rn-speed) ease-in-out infinite;
+               animation-delay:calc(var(--rn-speed) * -.58) }
+/* De armen lopen tegen de benen in: rechterarm vooruit als linkerbeen vooruit. */
+.rnArmF      { transform-origin:70px 46px;   animation:rnArm var(--rn-speed) ease-in-out infinite;
+               animation-delay:calc(var(--rn-speed) * -.5) }
+.rnArmB      { transform-origin:62px 47px;   animation:rnArm var(--rn-speed) ease-in-out infinite }
+.rnHead      { transform-origin:72px 40px;   animation:rnHead var(--rn-speed) ease-in-out infinite }
+.rnBandTail  { transform-origin:59px 23px;   animation:rnTail calc(var(--rn-speed) * .75) ease-in-out infinite }
+.rnEye       { transform-origin:78px 27px;   animation:rnBlink 5.2s step-end infinite }
+.rnShadow    { animation:rnShadow calc(var(--rn-speed) / 2) ease-in-out infinite }
+.rnLines     { opacity:0; animation:rnDash calc(var(--rn-speed) * .9) linear infinite }
+.rnSweat     { opacity:var(--rn-sweat); transform-origin:90px 18px;
+               animation:rnDrop calc(var(--rn-speed) * 2) ease-in infinite }
+
+@keyframes rnBob    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3.5px)} }
+@keyframes rnShadow { 0%,100%{transform:scaleX(1);opacity:.35} 50%{transform:scaleX(.88);opacity:.22} }
+@keyframes rnThigh  { 0%,100%{transform:rotate(30deg)} 50%{transform:rotate(-28deg)} }
+@keyframes rnShin   { 0%{transform:rotate(6deg)} 30%{transform:rotate(68deg)}
+                      62%{transform:rotate(10deg)} 100%{transform:rotate(6deg)} }
+@keyframes rnArm    { 0%,100%{transform:rotate(34deg)} 50%{transform:rotate(-38deg)} }
+@keyframes rnHead   { 0%,100%{transform:rotate(-1.5deg)} 50%{transform:rotate(1.5deg)} }
+@keyframes rnTail   { 0%,100%{transform:rotate(-14deg)} 50%{transform:rotate(12deg)} }
+@keyframes rnBlink  { 0%,96%{transform:scaleY(1)} 97%,99%{transform:scaleY(.1)} }
+@keyframes rnDash   { 0%{opacity:0;transform:translateX(10px)} 40%{opacity:.5}
+                      100%{opacity:0;transform:translateX(-16px)} }
+@keyframes rnDrop   { 0%,55%{opacity:0;transform:translate(0,0) scale(.6)}
+                      70%{opacity:var(--rn-sweat);transform:translate(2px,2px) scale(1)}
+                      100%{opacity:0;transform:translate(6px,16px) scale(.8)} }
+
+/* Staat van de bot. Alleen de variabelen veranderen, niet de tekening. */
+.coachPanel.is-thinking { --rn-speed:.30s; --rn-sweat:.9 }
+.coachPanel.is-talking  { --rn-speed:.58s }
+.coachPanel.is-idle     { --rn-speed:1.15s }
+.coachFab.is-waving     { --rn-speed:.42s }
+
+@media (prefers-reduced-motion:reduce){
+  .rn *, .rnAll { animation:none!important }
+}
+
+/* ---------- de knop rechtsonder ---------- */
+
+.coachFab{
+  position:fixed; right:18px; bottom:18px; z-index:1200;
+  width:68px; height:68px; padding:0; border:none; cursor:pointer;
+  border-radius:50%; background:linear-gradient(160deg,#1b2435,#121724);
+  box-shadow:0 2px 6px #0007, 0 14px 32px -12px #000b, inset 0 0 0 1px #2d3a4e;
+  display:grid; place-items:center;
+  transition:transform .18s var(--ease), box-shadow .18s var(--ease);
+}
+.coachFab:hover{ transform:translateY(-2px) scale(1.04) }
+.coachFab:active{ transform:scale(.97) }
+.coachFab .rn{ width:54px; height:56px; margin-top:2px }
+.coachFab[hidden]{ display:none!important }
+
+.coachBadge{
+  position:absolute; top:-2px; right:-2px; min-width:20px; height:20px;
+  border-radius:10px; background:var(--bad); color:#fff;
+  font-size:11.5px; font-weight:700; line-height:20px; text-align:center;
+  padding:0 5px; box-shadow:0 0 0 2px var(--bg);
+}
+
+/* ---------- het spraakwolkje bij de knop ---------- */
+
+.coachNudge{
+  position:fixed; right:94px; bottom:30px; z-index:1200; max-width:270px;
+  background:var(--panel); border:1px solid var(--line); border-radius:14px;
+  padding:11px 34px 11px 13px; color:var(--ink); font-size:13.5px; line-height:1.5;
+  box-shadow:var(--shadow-lg); cursor:pointer;
+  animation:coachPop .34s var(--ease) both;
+}
+.coachNudge::after{
+  content:''; position:absolute; right:-6px; bottom:18px; width:12px; height:12px;
+  background:var(--panel); border-right:1px solid var(--line);
+  border-top:1px solid var(--line); transform:rotate(45deg);
+}
+.coachNudgeClose{
+  position:absolute; top:4px; right:6px; background:none; border:none;
+  color:var(--ink3); font-size:19px; line-height:1; cursor:pointer; padding:4px;
+}
+.coachNudgeClose:hover{ color:var(--ink) }
+@keyframes coachPop{ from{opacity:0;transform:translateY(8px) scale(.96)} to{opacity:1} }
+
+/* ---------- het paneel ---------- */
+
+.coachPanel{
+  position:fixed; right:16px; bottom:16px; z-index:1300;
+  width:min(420px, calc(100vw - 32px)); height:min(680px, calc(100vh - 32px));
+  display:flex; flex-direction:column;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow-lg); overflow:hidden;
+  animation:coachIn .26s var(--ease) both;
+}
+@keyframes coachIn{ from{opacity:0;transform:translateY(14px) scale(.985)} to{opacity:1} }
+
+.coachHead{
+  display:flex; align-items:center; gap:10px; padding:10px 12px;
+  border-bottom:1px solid var(--line-soft);
+  background:linear-gradient(180deg,#1a2130,#141924);
+}
+.coachStage{
+  width:52px; height:54px; flex:0 0 auto;
+  display:grid; place-items:center;
+  background:radial-gradient(circle at 50% 70%, #24314a 0%, transparent 70%);
+  border-radius:12px;
+}
+.coachStage .rn{ width:50px; height:52px }
+.coachWho{ display:flex; flex-direction:column; min-width:0; flex:1 }
+.coachWho strong{ font-size:14.5px; font-weight:650 }
+/* Eén regel, desnoods afgekapt: anders duwt "klaar voor je vraag" de knoppen
+   van de kop af zodra het paneel smal is. */
+.coachStateLine{ color:var(--ink2); font-size:11.5px; margin-top:1px;
+                 white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.coachHeadBtns{ display:flex; gap:4px; flex:0 0 auto }
+.coachIcon{
+  width:34px; height:34px; border-radius:10px; cursor:pointer;
+  background:transparent; border:1px solid transparent; color:var(--ink2);
+  display:grid; place-items:center;
+  transition:background .15s var(--ease), color .15s var(--ease);
+}
+.coachIcon svg{ width:17px; height:17px }
+.coachIcon:hover{ background:var(--panel2); border-color:var(--line); color:var(--ink) }
+
+.coachLog{
+  flex:1; overflow-y:auto; overscroll-behavior:contain;
+  padding:14px 12px 4px; display:flex; flex-direction:column; gap:10px;
+}
+
+.cmsg{ max-width:88%; font-size:13.8px; line-height:1.55; white-space:pre-wrap;
+       word-wrap:break-word; animation:coachPop .22s var(--ease) both }
+.cmsg.me{
+  align-self:flex-end; background:var(--acc); color:#06101f;
+  padding:9px 13px; border-radius:15px 15px 4px 15px; font-weight:500;
+}
+.cmsg.bot{
+  align-self:flex-start; background:var(--panel2); color:var(--ink);
+  padding:10px 13px; border-radius:15px 15px 15px 4px;
+  border:1px solid var(--line-soft);
+}
+.cmsg.bot strong{ font-weight:650; color:#fff }
+.cmsg.err{ align-self:center; background:#2a1a22; border:1px solid #4a2733;
+           color:#ffb6c1; font-size:12.5px; padding:8px 12px; border-radius:12px }
+.cmeta{ align-self:flex-start; color:var(--ink3); font-size:10.5px; margin-top:-6px }
+
+/* drie stuiterende puntjes terwijl hij nadenkt */
+.ctyping{ align-self:flex-start; display:flex; gap:4px; padding:12px 14px;
+          background:var(--panel2); border:1px solid var(--line-soft);
+          border-radius:15px 15px 15px 4px }
+.ctyping i{ width:6px; height:6px; border-radius:50%; background:var(--ink2);
+            animation:ctype 1.1s ease-in-out infinite }
+.ctyping i:nth-child(2){ animation-delay:.15s }
+.ctyping i:nth-child(3){ animation-delay:.3s }
+@keyframes ctype{ 0%,100%{opacity:.25;transform:translateY(0)}
+                  50%{opacity:1;transform:translateY(-4px)} }
+
+/* ---------- voorstelkaartjes ---------- */
+
+.cact{
+  align-self:stretch; background:#131a28; border:1px solid var(--acc-dim);
+  border-left:3px solid var(--acc); border-radius:12px; padding:11px 12px;
+}
+.cact h4{ margin:0 0 3px; font-size:12.5px; font-weight:650; color:var(--acc);
+          letter-spacing:.01em; text-transform:uppercase }
+.cact p{ font-size:13px; line-height:1.5; color:var(--ink) }
+.cactBtns{ display:flex; gap:8px; margin-top:10px }
+.cactBtns .btn{ flex:0 0 auto }
+.cact.done{ border-left-color:var(--ok); border-color:#2fd6a322 }
+.cact.done h4{ color:var(--ok) }
+.cact.no{ border-left-color:var(--ink3); opacity:.6 }
+.cactMsg{ font-size:12.5px; margin-top:8px }
+
+/* ---------- suggestieknoppen ---------- */
+
+.coachChips{ display:flex; flex-wrap:wrap; gap:6px; padding:8px 12px 2px }
+.chip{
+  background:var(--panel2); border:1px solid var(--line); color:var(--ink2);
+  border-radius:999px; padding:6px 11px; font-size:12.3px; cursor:pointer;
+  transition:border-color .15s var(--ease), color .15s var(--ease);
+}
+.chip:hover{ border-color:var(--acc); color:var(--ink) }
+
+/* ---------- invoer ---------- */
+
+.coachForm{
+  display:flex; gap:8px; align-items:flex-end; padding:10px 12px 6px;
+  border-top:1px solid var(--line-soft);
+}
+.coachInput{
+  flex:1; resize:none; max-height:130px;
+  background:var(--bg-2); border:1px solid var(--line); border-radius:12px;
+  color:var(--ink); padding:10px 12px; font:inherit; font-size:13.8px; line-height:1.45;
+}
+.coachInput::placeholder{ color:var(--ink3) }
+.coachInput:focus{ outline:none; border-color:var(--acc); box-shadow:var(--ring) }
+.coachSend{
+  flex:0 0 auto; width:40px; height:40px; border-radius:12px; cursor:pointer;
+  background:var(--acc); border:none; color:#06101f; display:grid; place-items:center;
+}
+.coachSend svg{ width:19px; height:19px }
+.coachSend:disabled{ opacity:.45; cursor:default }
+.coachFoot{ color:var(--ink3); font-size:10.8px; padding:0 12px 10px; line-height:1.45 }
+
+/* ---------- telefoon ---------- */
+
+@media (max-width:640px){
+  .coachPanel{
+    right:0; bottom:0; width:100vw; height:100dvh; border-radius:0; border:none;
+  }
+  .coachFab{ right:14px; bottom:14px; width:60px; height:60px }
+  .coachFab .rn{ width:48px; height:50px }
+  .coachNudge{ right:84px; bottom:24px; max-width:min(240px, calc(100vw - 110px)) }
+  .cmsg{ max-width:92% }
+}
