@@ -1,0 +1,14 @@
+{
+  "goal_name": "NN CPC Loop Den Haag - halve marathon",
+  "race_date": "2027-03-14",
+  "start_date": "2026-10-26",
+  "distance_km": 21.1,
+  "days_per_week": 3,
+  "strength_day": 5,
+  "priority": "time",
+  "target_time_min": 120,
+  "acwr_cap": 1.4,
+  "ramp_in_weeks": 3,
+  "ramp_in_factor": 0.82,
+  "auto_start_long": true
+}

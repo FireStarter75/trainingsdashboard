@@ -7,6 +7,9 @@
  * naar /api/chat/apply, dat het opnieuw valideert voordat er iets gebeurt.
  */
 
+// Basispad: leeg in de gewone uitrol, "/test" in de testomgeving.
+const API = (document.documentElement.dataset.appBase || '');
+
 const cq = (s) => document.querySelector(s);
 let COACH = { open: false, busy: false, chips: [], enabled: true, greeted: false };
 
@@ -95,7 +98,7 @@ async function cApply(card, decision) {
   const id = card.dataset.id;
   card.querySelectorAll('button').forEach((b) => { b.disabled = true; });
   try {
-    const r = await fetch('/api/chat/apply', {
+    const r = await fetch(API + '/api/chat/apply', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, decision }),
     });
@@ -159,7 +162,7 @@ async function cSend(text) {
   cState('thinking', 'denkt na…');
 
   try {
-    const r = await fetch('/api/chat', {
+    const r = await fetch(API + '/api/chat', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: msg }),
     });
@@ -238,7 +241,7 @@ document.addEventListener('keydown', (e) => {
 
 cq('#coachClear').addEventListener('click', async () => {
   if (!confirm('Het hele gesprek wissen? Je logboek en je plan blijven staan.')) return;
-  await fetch('/api/chat/clear', { method: 'POST' });
+  await fetch(API + '/api/chat/clear', { method: 'POST' });
   cEl.log.innerHTML = '';
   COACH.greeted = false;
   cBoot(true);
@@ -253,7 +256,7 @@ function cFirstSentence(t) {
 
 async function cBoot(force) {
   try {
-    const j = await (await fetch('/api/chat/opening')).json();
+    const j = await (await fetch(API + '/api/chat/opening')).json();
     if (j.enabled === false) {
       COACH.enabled = false;
       cShow(cEl.fab, false);

@@ -33,6 +33,33 @@ TAX, END = mcp_client.from_env()
 GPX_DIR = os.environ.get("GPX_DIR", "/gpx")
 CACHE_TTL = int(os.environ.get("CACHE_TTL", "900"))   # 15 min
 
+# Testomgeving achter dash.veldhuizen.us/test: de Cloudflare-tunnel stuurt
+# /test/... naar een aparte container, die deze prefix hier weer afsnijdt.
+# SCRIPT_NAME gaat mee, zodat url_for overal een /test-voorvoegsel meegeeft
+# (ook in de <html data-app-base> die de JS-fetches gebruiken). Buiten de
+# prefix is deze app niet bereikbaar.
+_PREFIX = os.environ.get("DASH_URL_PREFIX", "").rstrip("/")
+
+class _PrefixMiddleware:
+    def __init__(self, wsgi, prefix):
+        self.wsgi = wsgi
+        self.prefix = prefix
+
+    def __call__(self, environ, start_response):
+        path = environ.get("PATH_INFO", "")
+        if path == self.prefix or not path:
+            environ["PATH_INFO"] = "/"
+        elif path.startswith(self.prefix + "/"):
+            environ["PATH_INFO"] = path[len(self.prefix):]
+        else:
+            start_response("404 Not Found", [("Content-Type", "text/plain; charset=utf-8")])
+            return [b"deze app hangt alleen onder de prefix"]
+        environ["SCRIPT_NAME"] = self.prefix
+        return self.wsgi(environ, start_response)
+
+if _PREFIX:
+    app.wsgi_app = _PrefixMiddleware(app.wsgi_app, _PREFIX)
+
 
 # ---------------------------------------------------------------- hulpfuncties
 

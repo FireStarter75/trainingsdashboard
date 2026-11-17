@@ -4,6 +4,10 @@ let STATE = null;
 const charts = {};
 let map = null;
 
+// Basispad van de app: leeg in de gewone uitrol, "/test" in de testomgeving.
+// De <html data-app-base=...> komt uit de template (request.script_name).
+const API = (document.documentElement.dataset.appBase || '');
+
 const $ = (s) => document.querySelector(s);
 
 // Zowel het attribuut als de inline style, zodat het werkt ongeacht of een
@@ -52,7 +56,7 @@ if (window.Chart) {
 async function load(refresh) {
   show($('#loading'), true, 'grid');
   try {
-    const r = await fetch('/api/state' + (refresh ? '?refresh=1' : ''));
+    const r = await fetch(API + '/api/state' + (refresh ? '?refresh=1' : ''));
     const j = await r.json();
     if (j.error) throw new Error(j.error);
     STATE = j;
@@ -700,7 +704,7 @@ function fitVisible() {
 
 async function loadRoutes() {
   try {
-    const r = await fetch('/api/routes?limit=12');
+    const r = await fetch(API + '/api/routes?limit=12');
     const routes = await r.json();
     if (!Array.isArray(routes) || !routes.length) {
       $('#map').innerHTML = '<p class="muted" style="padding:28px;text-align:center">Nog geen GPS-routes gevonden.</p>';
@@ -785,7 +789,7 @@ document.addEventListener('click', (e) => {
 
 async function loadDiag() {
   try {
-    const j = await (await fetch('/api/health')).json();
+    const j = await (await fetch(API + '/api/health')).json();
     const rows = Object.entries(j).map(([k, v]) =>
       `<div class="diagRow"><span class="dot ${v.ok ? 'ok' : 'bad'}"></span>
         <b>${k}</b><span class="muted">${v.ok ? v.tools + ' tools bereikbaar' : v.error}</span></div>`);
@@ -801,7 +805,7 @@ async function upload(payload, btn) {
   const msg = $('#uploadMsg');
   if (btn) { btn.disabled = true; btn.textContent = 'Bezig…'; }
   try {
-    const r = await fetch('/api/upload', {
+    const r = await fetch(API + '/api/upload', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
@@ -838,7 +842,7 @@ $('#btnAdapt').addEventListener('click', async (e) => {
   const b = e.target;
   b.disabled = true; b.textContent = 'Beoordelen…';
   try {
-    const j = await (await fetch('/api/adapt', { method: 'POST' })).json();
+    const j = await (await fetch(API + '/api/adapt', { method: 'POST' })).json();
     if (!j.ok) throw new Error(j.error || 'onbekende fout');
     await load(false);
   } catch (err) {
@@ -861,7 +865,7 @@ $('#btnGoal').addEventListener('click', () => {
 $('#goalDlg').addEventListener('close', async () => {
   if ($('#goalDlg').returnValue !== 'save') return;
   const f = $('#goalForm');
-  await fetch('/api/goal', {
+  await fetch(API + '/api/goal', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       goal_name: f.goal_name.value,

@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="nl">
+<html lang="nl" data-app-base="{{ (request.script_root or '') | trim }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>dash</title>
-<link rel="icon" type="image/svg+xml" href="/static/icon.svg?v={{ v }}">
-<link rel="icon" type="image/png" sizes="32x32" href="/static/icon-32.png?v={{ v }}">
-<link rel="apple-touch-icon" sizes="180x180" href="/static/icon-180.png?v={{ v }}">
-<link rel="manifest" href="/static/manifest.webmanifest?v={{ v }}">
-<meta name="theme-color" content="#0c1017">
+<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icon.svg', v=v) }}">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icon-32.png', v=v) }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icon-180.png', v=v) }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest', v=v) }}">
+<meta name="theme-color" content="#080b11">
 <meta name="apple-mobile-web-app-title" content="dash">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,8 +17,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="/static/style.css?v={{ v }}">
-<link rel="stylesheet" href="/static/coach.css?v={{ v }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=v) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='coach.css', v=v) }}">
 </head>
 <body>
 <div id="loading" class="loading">Data ophalen uit Garmin…</div>
@@ -31,7 +31,7 @@
   <div class="topActions">
     <button id="btnRefresh" class="btn">Verversen</button>
     <button id="btnGoal" class="btn ghost">Doel wijzigen</button>
-    <a href="/logout" class="btn ghost" style="text-decoration:none">Uitloggen</a>
+    <a href="{{ url_for('logout') }}" class="btn ghost" style="text-decoration:none">Uitloggen</a>
   </div>
 </header>
 
