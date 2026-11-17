@@ -230,6 +230,7 @@ def build_state(force=False):
         "metrics": metrics,
         "uploads": store.uploads(),
         "last_adaptation_week": _last_adaptation_week(),
+        "last_adaptation_target": _last_adaptation_target(),
         "scheduler": (store.cache_get("scheduler_heartbeat")[0] or None),
         "cache_ages": store.cache_ages(),
     }
@@ -489,9 +490,13 @@ def run_adaptation(reason="handmatig"):
                         "zet dit niet terug zolang de week nog niet begonnen is."
                         % time.strftime("%d-%m", time.localtime(cleared_at))],
         }
+        # Dit stempel is wat de volgende beoordeling laat zien dat er geen
+        # nieuw besluit is, maar een bewaard besluit van de coach.
+        signals["via"] = "coach_clear"
         signals["coach_clear_respected"] = cleared_at
 
     store.save_adaptation(upcoming["start"], decision, signals)
+    store.cache_put("last_adaptation_target", upcoming["start"])
     store.cache_put("last_adaptation_week",
                     (date.today() - timedelta(days=date.today().weekday())).isoformat())
     app.logger.info("aanpassing %s voor week %s: %s (x%.2f) - %s",
@@ -502,6 +507,14 @@ def run_adaptation(reason="handmatig"):
 
 def _last_adaptation_week():
     val, _ = store.cache_get("last_adaptation_week")
+    return val
+
+
+def _last_adaptation_target():
+    """De week waar het laatste oordeel over ging — niet de week waarin het
+    viel. Voor de kaart: 'laatst beoordeeld' moet zeggen welke week beoordeeld
+    werd, anders leest het als een oordeel over de lopende week."""
+    val, _ = store.cache_get("last_adaptation_target")
     return val
 
 

@@ -185,7 +185,7 @@ function renderAdapt() {
   const ad = (upcoming && upcoming.adapted) || (current && current.adapted) || null;
   const target = (upcoming && upcoming.adapted) ? upcoming : current;
 
-  const when = STATE.last_adaptation_week;
+  const when = STATE.last_adaptation_target || STATE.last_adaptation_week;
   const hb = STATE.scheduler;
   const DAGEN = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'];
   let sched = 'planner niet actief';
